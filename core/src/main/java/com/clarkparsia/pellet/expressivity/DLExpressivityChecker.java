@@ -220,10 +220,12 @@ public class DLExpressivityChecker extends ProfileBasedExpressivityChecker {
 			Role role = m_KB.getRole( term.getArgument( 0 ) );
 			ATermAppl c = (ATermAppl) term.getArgument( 2 );
 			if( !ATermUtils.isTop( c ) ) {
-				if( role.isDatatypeRole() )
+				if( role.isDatatypeRole() ) {
 					m_Expressivity.setHasCardinalityD(true);
-				else
+				} else {
 					m_Expressivity.setHasCardinalityQ(true);
+					visit(c);
+				}
 			}
 			else {
 				if( role.isDatatypeRole() )
@@ -239,10 +241,12 @@ public class DLExpressivityChecker extends ProfileBasedExpressivityChecker {
 			int cardinality = ((ATermInt) term.getArgument( 1 )).getInt();
 			ATermAppl c = (ATermAppl) term.getArgument( 2 );
 			if( !ATermUtils.isTop( c ) ) {
-				if( role.isDatatypeRole() )
+				if( role.isDatatypeRole() ) {
 					m_Expressivity.setHasCardinalityD(true);
-				else				
+				} else {
 					m_Expressivity.setHasCardinalityQ(true);
+					visit(c);
+				}
 			}
 			else if( cardinality > 1 ) {
 				if( role.isDatatypeRole() )
