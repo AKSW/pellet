@@ -10,7 +10,7 @@
 
   <groupId>com.clarkparsia.pellet</groupId>
   <artifactId>pellet-parent</artifactId>
-  <version>2.5.1-dllearner</version>
+  <version>2.5.2-dllearner</version>
   <packaging>pom</packaging>
   <name>Pellet :: Parent POM</name>
   <description>The Clark and Parsia Pellet OWL Reasoner</description>
@@ -63,6 +63,40 @@
   </dependencyManagement>
 
   <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>deploy</phase>
+            <goals><goal>jar-no-fork</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <phase>deploy</phase>
+            <goals><goal>jar</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- explicitly define maven-deploy-plugin after other to force exec order -->
+        <artifactId>maven-deploy-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>deploy</id>
+            <phase>deploy</phase>
+            <goals><goal>deploy</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
     <pluginManagement>
       <plugins>
 

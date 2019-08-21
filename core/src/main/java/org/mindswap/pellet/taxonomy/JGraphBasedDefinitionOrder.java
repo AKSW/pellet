@@ -6,30 +6,19 @@
 
 package org.mindswap.pellet.taxonomy;
 
-import static com.clarkparsia.pellet.utils.TermFactory.BOTTOM;
-import static com.clarkparsia.pellet.utils.TermFactory.TOP;
-
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.Set;
-import java.util.TreeSet;
-
-import org.jgrapht.DirectedGraph;
-import org.jgrapht.alg.StrongConnectivityInspector;
+import aterm.ATerm;
+import aterm.ATermAppl;
+import com.clarkparsia.pellet.utils.CollectionUtils;
+import org.jgrapht.alg.connectivity.KosarajuStrongConnectivityInspector;
+import org.jgrapht.alg.interfaces.StrongConnectivityAlgorithm;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.mindswap.pellet.KnowledgeBase;
 
-import aterm.ATerm;
-import aterm.ATermAppl;
+import java.util.*;
 
-import com.clarkparsia.pellet.utils.CollectionUtils;
+import static com.clarkparsia.pellet.utils.TermFactory.BOTTOM;
+import static com.clarkparsia.pellet.utils.TermFactory.TOP;
 
 /**
  * 
@@ -38,7 +27,7 @@ import com.clarkparsia.pellet.utils.CollectionUtils;
 public class JGraphBasedDefinitionOrder extends AbstractDefinitionOrder {
 	private Map<ATermAppl,Set<ATermAppl>> equivalents;
 	
-	private DirectedGraph<ATermAppl,DefaultEdge> graph;	
+	private DefaultDirectedGraph<ATermAppl,DefaultEdge> graph;
 
 	public JGraphBasedDefinitionOrder(KnowledgeBase kb, Comparator<ATerm> comparator) {		
 		super( kb, comparator );
@@ -112,8 +101,8 @@ public class JGraphBasedDefinitionOrder extends AbstractDefinitionOrder {
 		
 		cyclicConcepts.addAll( getEquivalents( TOP ) );
 				
-		StrongConnectivityInspector<ATermAppl, DefaultEdge> scInspector = 
-			new StrongConnectivityInspector<ATermAppl, DefaultEdge>( graph );
+		StrongConnectivityAlgorithm<ATermAppl, DefaultEdge> scInspector =
+			new KosarajuStrongConnectivityInspector<>( graph );
 		List<Set<ATermAppl>> sccList = scInspector.stronglyConnectedSets();
 		for( Set<ATermAppl> scc : sccList ) {
 			if( scc.size() == 1 )

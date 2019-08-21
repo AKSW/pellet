@@ -8,37 +8,8 @@ package com.clarkparsia.pellint.lintpattern.ontology;
 
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.Map.Entry;
-
-import org.jgrapht.Graph;
-import org.jgrapht.alg.CycleDetector;
-import org.jgrapht.alg.StrongConnectivityInspector;
-import org.jgrapht.alg.TransitiveClosure;
-import org.jgrapht.ext.DOTExporter;
-import org.jgrapht.ext.StringNameProvider;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.DirectedSubgraph;
-import org.jgrapht.graph.EdgeReversedGraph;
-import org.jgrapht.traverse.TopologicalOrderIterator;
-import org.semanticweb.owlapi.model.AxiomType;
-import org.semanticweb.owlapi.model.OWLClass;
-import org.semanticweb.owlapi.model.OWLClassAssertionAxiom;
-import org.semanticweb.owlapi.model.OWLClassExpression;
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
-import org.semanticweb.owlapi.model.OWLObjectExactCardinality;
-import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
-import org.semanticweb.owlapi.model.OWLObjectMinCardinality;
-import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
-import org.semanticweb.owlapi.model.OWLObjectUnionOf;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
-import org.semanticweb.owlapi.util.OWLClassExpressionVisitorAdapter;
 
 import com.clarkparsia.pellint.format.LintFormat;
 import com.clarkparsia.pellint.format.SimpleLintFormat;
@@ -46,6 +17,19 @@ import com.clarkparsia.pellint.model.Lint;
 import com.clarkparsia.pellint.model.LintFactory;
 import com.clarkparsia.pellint.model.Severity;
 import com.clarkparsia.pellint.util.OptimizedDirectedMultigraph;
+import org.jgrapht.Graph;
+import org.jgrapht.alg.TransitiveClosure;
+import org.jgrapht.alg.connectivity.KosarajuStrongConnectivityInspector;
+import org.jgrapht.alg.cycle.CycleDetector;
+import org.jgrapht.alg.interfaces.StrongConnectivityAlgorithm;
+import org.jgrapht.graph.AsSubgraph;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.EdgeReversedGraph;
+import org.jgrapht.io.DOTExporter;
+import org.jgrapht.io.StringComponentNameProvider;
+import org.jgrapht.traverse.TopologicalOrderIterator;
+import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.util.OWLClassExpressionVisitorAdapter;
 
 /**
  * <p>
@@ -123,8 +107,8 @@ public class ExistentialExplosionPattern implements OntologyLintPattern {
 
 	@SuppressWarnings("unused")
 	private static <V,E> void printGraph(Graph<V,E> graph) {
-		DOTExporter<V,E> exp = new DOTExporter<V,E>(new StringNameProvider<V>(), null, null);
-		exp.export(new BufferedWriter(new PrintWriter(System.out)), graph);
+		DOTExporter<V,E> exp = new DOTExporter<V,E>(new StringComponentNameProvider<>(), null, null);
+		exp.exportGraph(graph, new BufferedWriter(new PrintWriter(System.out)));
 	}
 
 	private static OptimizedDirectedMultigraph<OWLClass> extractGraphFromSubsumptionAxiomsWith(OWLOntology ontology, ClassCollector visitor) {
@@ -210,11 +194,11 @@ public class ExistentialExplosionPattern implements OntologyLintPattern {
 	private void estimateTreeSizesForCycles(OptimizedDirectedMultigraph<OWLClass> existentialRestrictionGraph) {
 		int maxSizeOfCompleteGraphToIgnore = getMaxSizeOfCompleteGraphToIgnore(m_MaxTreeSize);
 		
-		StrongConnectivityInspector<OWLClass, DefaultWeightedEdge> connectivityInspector = new StrongConnectivityInspector<OWLClass, DefaultWeightedEdge>(existentialRestrictionGraph);
+		StrongConnectivityAlgorithm<OWLClass, DefaultWeightedEdge> connectivityInspector = new KosarajuStrongConnectivityInspector<>(existentialRestrictionGraph);
 		for (Set<OWLClass> connectedSet : connectivityInspector.stronglyConnectedSets()) {
 			if (connectedSet.size() <= maxSizeOfCompleteGraphToIgnore) continue;
 
-			DirectedSubgraph<OWLClass, DefaultWeightedEdge> subgraph = new DirectedSubgraph<OWLClass, DefaultWeightedEdge>(existentialRestrictionGraph, connectedSet, null);
+			AsSubgraph<OWLClass, DefaultWeightedEdge> subgraph = new AsSubgraph<OWLClass, DefaultWeightedEdge>(existentialRestrictionGraph, connectedSet, null);
 			double estimatedTreeSize = 1.0;
 			for (OWLClass owlClass : connectedSet) {
 				estimatedTreeSize *= subgraph.outDegreeOf(owlClass);
@@ -230,11 +214,11 @@ public class ExistentialExplosionPattern implements OntologyLintPattern {
 	}
 	
 	private void estimateTreeSizesForCyclesWithIndividuals(OptimizedDirectedMultigraph<OWLClass> existentialRestrictionGraph, OptimizedDirectedMultigraph<OWLClass> toldSubsumptionGraph, Map<OWLClass, Integer> individualCount) {
-		StrongConnectivityInspector<OWLClass, DefaultWeightedEdge> connectivityInspector = new StrongConnectivityInspector<OWLClass, DefaultWeightedEdge>(existentialRestrictionGraph);
+		StrongConnectivityAlgorithm<OWLClass, DefaultWeightedEdge> connectivityInspector = new KosarajuStrongConnectivityInspector<OWLClass, DefaultWeightedEdge>(existentialRestrictionGraph);
 		for (Set<OWLClass> connectedSet : connectivityInspector.stronglyConnectedSets()) {
 			if (connectedSet.size() <= 1) continue;
 
-			DirectedSubgraph<OWLClass, DefaultWeightedEdge> subgraph = new DirectedSubgraph<OWLClass, DefaultWeightedEdge>(existentialRestrictionGraph, connectedSet, null);
+			AsSubgraph<OWLClass, DefaultWeightedEdge> subgraph = new AsSubgraph<OWLClass, DefaultWeightedEdge>(existentialRestrictionGraph, connectedSet, null);
 			double estimatedTreeSize = 1.0;
 			for (OWLClass owlClass : connectedSet) {
 				estimatedTreeSize *= subgraph.outDegreeOf(owlClass);

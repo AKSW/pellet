@@ -11,6 +11,8 @@ package com.clarkparsia.pellet.sparqldl.jena;
 import aterm.ATermAppl;
 import com.clarkparsia.pellet.sparqldl.model.QueryParameters;
 import com.clarkparsia.pellet.sparqldl.parser.ARQParser;
+import org.apache.jena.atlas.json.JsonArray;
+import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.atlas.lib.NotImplemented;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Triple;
@@ -172,6 +174,16 @@ class SparqlDLExecution implements QueryExecution {
 
 		return (results != null) ? results.hasNext() : QueryExecutionFactory.create(query, source, initialBinding)
 		                .execAsk();
+	}
+
+	@Override
+	public JsonArray execJson() {
+		throw new UnsupportedOperationException("Not supported yet!");
+	}
+
+	@Override
+	public Iterator<JsonObject> execJsonItems() {
+		throw new UnsupportedOperationException("Not supported yet!");
 	}
 
 	/**

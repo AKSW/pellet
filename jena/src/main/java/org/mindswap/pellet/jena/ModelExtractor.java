@@ -13,6 +13,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.mindswap.pellet.KnowledgeBase;
 import org.mindswap.pellet.Role;
@@ -25,7 +26,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.util.iterator.Filter;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -210,12 +210,7 @@ public class ModelExtractor {
 	/**
 	 * A filter that does not accept anything.
 	 */
-	public static final Filter<Triple> FILTER_NONE = new Filter<Triple>() {
-		@Override
-		public boolean accept(Triple o) {
-			return false;
-		}
-	};
+	public static final Predicate<Triple> FILTER_NONE = o -> false;
 
 	/**
 	 * Associated KB
@@ -225,7 +220,7 @@ public class ModelExtractor {
 	/**
 	 * Filter that will be used to drop inferences
 	 */
-	private Filter<Triple>			filter = FILTER_NONE;
+	private Predicate<Triple>			filter = FILTER_NONE;
 
 	/**
 	 * Controls the selected statements for methods where no selector is passed
@@ -273,7 +268,7 @@ public class ModelExtractor {
 	 */
 	private void addTriple(List<Triple> triples, Node s, Node p, Node o) {
 		Triple triple = Triple.create( s, p, o );
-		if( !filter.accept( triple ) )
+		if( !filter.test( triple ) )
 			triples.add( triple );
 	}
 	
@@ -685,7 +680,7 @@ public class ModelExtractor {
 	 * 
 	 * @return
 	 */
-	public Filter<Triple> getFilter() {
+	public Predicate<Triple> getFilter() {
 		return filter;
 	}
 
@@ -697,7 +692,7 @@ public class ModelExtractor {
 	 * 
 	 * @param filter
 	 */
-	public void setFilter(Filter<Triple> filter) {
+	public void setFilter(Predicate<Triple> filter) {
 		if( filter == null )
 			throw new NullPointerException( "Filter cannot be null" );
 		
